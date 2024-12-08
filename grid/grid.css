@@ -1,0 +1,92 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    font-size: 1rem;
+}
+
+.grid-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+/* jQGrid 테이블 */
+.grid-table {
+    width: 85%;
+    height: 100vh;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.ui-jqgrid .ui-jqgrid-htable th {
+    font-weight: bold;
+}
+
+/* 순번 칼럼 헤더 텍스트 설정 */
+.ui-jqgrid .ui-jqgrid-htable th.ui-th-ltr[id$="_rn"]::after {
+    content: 'No.';
+    display: block;
+    text-align: center;
+}
+
+/* 말줄임표 옵션 */
+.ellipsis {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 페이지 정보 */
+.page-info {
+    margin-top: 10px;
+    text-align: left;
+}
+
+/* 전체 건 수 */
+.total-count {
+    color: #007EFF;
+    font-weight: bold;
+}
+
+/* 옵션 컨테이너 */
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 15%;
+    height: 100vh;
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    font-size: 0.75rem;
+}
+
+.options label {
+    margin-right: 15px;
+}
+
+/* 옵션 그룹 */
+.option-group {
+    margin-bottom: 10px;
+}
+
+/* 하위 옵션 */
+.sub-option {
+    margin: 10px 0 0 20px;
+}
+
+.sub-option label {
+    margin-right: 10px;
+}
+
+/* 옵션 제목 */
+.option-title {
+    margin-top: 10px;
+}
+
+/* 옵션 리스트 */
+.option-list {
+    margin: 8px 0;
+}
