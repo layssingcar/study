@@ -10,15 +10,28 @@
     gap: 20px;
 }
 
+/* 버튼 컨테이너 */
+.grid-btn {
+    margin-bottom: 5px;
+}
+
+/* 버튼 */
+.btn {
+    margin-right: 5px;
+    line-height: 1.5; /* 버튼 높이 조정 */
+    cursor: pointer;
+}
+
 /* jQGrid 테이블 */
 .grid-table {
-    width: 85%;
+    flex-grow: 1;
     height: 100vh;
     padding: 20px;
     overflow-y: auto;
 }
 
 .ui-jqgrid .ui-jqgrid-htable th {
+    height: 27px;
     font-weight: bold;
 }
 
@@ -27,6 +40,20 @@
     content: 'No.';
     display: block;
     text-align: center;
+}
+
+/* 정렬 아이콘 */
+.ui-jqgrid .s-ico {
+    display: inline-block !important;
+    margin: 5px 0 0 5px;
+}
+
+/* 정렬 아이콘 왼쪽고정 */
+.ui-jqgrid .s-ico.left {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
 }
 
 /* 말줄임표 옵션 */
@@ -54,8 +81,8 @@
     flex-direction: column;
     gap: 10px;
     width: 15%;
-    height: 100vh;
-    margin-bottom: 10px;
+    height: 95vh;
+    margin: 20px 20px 20px 0;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -67,9 +94,14 @@
     margin-right: 15px;
 }
 
-/* 옵션 그룹 */
-.option-group {
-    margin-bottom: 10px;
+/* 제목 label */
+.title-label {
+    font-weight: bold;
+}
+
+/* 옵션 checked */
+.checked {
+    font-weight: bold;
 }
 
 /* 하위 옵션 */
@@ -89,4 +121,35 @@
 /* 옵션 리스트 */
 .option-list {
     margin: 8px 0;
+}
+
+/* 옵션 아이템 */
+.option-item {
+    display: flex;
+    justify-content: space-between;
+}
+
+input[type="number"] {
+    text-align: right;
+}
+
+.input-option input, select {
+    border: none;
+    border-bottom: 1px solid #bbb;
+    outline: none; /* 포커스 시 외곽선 제거 */
+    background-color: transparent; /* 배경색 제거 */
+}
+
+.input-option input:focus {
+    border-bottom: 1px solid #007EFF;
+}
+
+/* 페이징 하위 옵션 */
+#pagingOption input, select {
+    width: 100px;
+}
+
+/* 행 높이 옵션 */
+#rowHeight {
+    width: 175px;
 }

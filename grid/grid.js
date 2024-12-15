@@ -8,6 +8,11 @@
         - setGridParam: 그리드 설정 값 변경
         - getGridParam: 그리드 설정 값 조회
         - reloadGrid: 그리드 데이터 새로고침
+        - addRowData: 새로운 행 추가
+        - delRowData: 행 삭제
+        - getRowData: 행 데이터 조회
+        - hideCol: 칼럼 숨기기
+        - showCol: 칼럼 표시
     
     [ 기타 사용한 API ]
     * detach(): DOM 요소 제거 (삭제된 요소의 데이터와 이벤트 핸들러는 유지)
@@ -20,13 +25,20 @@
     * 순번 옵션
     * 정렬 옵션 (ASC, DESC)
     * 선택 유형 옵션 (Single, Multi, None)
+    * 버튼 옵션 (추가, 삭제, 복사, Up/Down)
+    * 행 추가 위치 옵션 (상단, 하단)
     * 말줄임표 옵션
     * 전체 건 수 표시 옵션
     * 페이징 옵션
+        - 페이징 행 설정 (직접입력, 선택목록)
+        - 페이징 당 행 개수
+    * 정렬 위치 옵션
+    * 행 높이 옵션
  */
 
 $(document).ready(function () {
-    const grid = $("#grid");
+    const grid = $("#grid");        // 테이블
+    const gridBtn = $('.grid-btn'); // 버튼 컨테이너
 
     // 기본 colNames 설정
     let colNames = ['아이디', '제목', '내용'];
@@ -46,6 +58,27 @@ $(document).ready(function () {
         success: function(data) {
             dataList = data;
             createGrid();
+        }
+    });
+
+    // 초기 checked 옵션 설정
+    $('input[type="checkbox"], input[type="radio"]').each(function() {
+        if ($(this).is(':checked')) {
+            $(this).next('label').addClass('checked');
+        }
+    });
+
+    // 라디오버튼, 체크박스 checked 옵션
+    $('input[type="radio"], input[type="checkbox"]').on('change', function() {
+        // 같은 이름의 라디오버튼 label 클래스 제거
+        if ($(this).attr('type') === 'radio') {
+            $('input[name="' + $(this).attr('name') + '"]').next('label').removeClass('checked');
+        }
+
+        if ($(this).is(':checked')) {
+            $(this).next('label').addClass('checked');
+        } else {
+            $(this).next('label').removeClass('checked');
         }
     });
 
@@ -152,6 +185,80 @@ $(document).ready(function () {
         });
     }
 
+    // 버튼 옵션
+    $('#useButtongrid-add, #useButtongrid-delete, #useButtongrid-copy, #useButtongrid-upDown').on('change', function() {
+        gridBtn.empty(); // 기존 버튼 제거
+
+        if ($('#useButtongrid-add').is(':checked')) {
+            gridBtn.append('<button class="btn grid-add-btn">추가</button>');
+        }
+        if ($('#useButtongrid-delete').is(':checked')) {
+            gridBtn.append('<button class="btn grid-delete-btn">삭제</button>');
+        }
+        if ($('#useButtongrid-copy').is(':checked')) {
+            gridBtn.append('<button class="btn grid-copy-btn">복사</button>');
+        }
+        if ($('#useButtongrid-upDown').is(':checked')) {
+            gridBtn.append('<button class="btn grid-up-btn">▲</button>');
+            gridBtn.append('<button class="btn grid-down-btn">▼</button>');
+        }
+    });
+
+    // 행 추가 버튼
+    gridBtn.on('click', '.grid-add-btn', function() {
+        const newRowData = {UserId: '', title: '', content: ''};  // 새 행 데이터
+        const addRowAt = $('input[name="addRowAt"]:checked').val(); // 행 추가 위치 옵션 값
+
+        if (addRowAt === 'bottom') {
+            grid.jqGrid('addRowData', undefined, newRowData, 'last');
+        } else {
+            grid.jqGrid('addRowData', undefined, newRowData, 'first');
+        }
+    });
+
+    // 행 삭제 버튼
+    gridBtn.on('click', '.grid-delete-btn', function() {
+        const selectType = $('input[name="selectType"]:checked').val();
+        let selectedRows = [];
+
+        if (selectType === 'radio') { // Single
+            selectedRows = grid.jqGrid('getGridParam', 'selrow');
+            if (selectedRows) {
+                grid.jqGrid('delRowData', selectedRows);
+            }
+        } else if (selectType === 'checkbox') { // Multi
+            selectedRows = grid.jqGrid('getGridParam', 'selarrrow');
+            if (selectedRows.length > 0) {
+                for (let i = selectedRows.length - 1; i >= 0; i--) { // 역순으로 삭제
+                    grid.jqGrid('delRowData', selectedRows[i]);
+                }
+            }
+        }
+    });
+
+    // 행 복사 버튼
+    gridBtn.on('click', '.grid-copy-btn', function() {
+        const selectType = $('input[name="selectType"]:checked').val();
+        let selectedRows = [];
+        let rowData = [];
+    
+        if (selectType === 'radio') { // Single
+            selectedRows = grid.jqGrid('getGridParam', 'selrow');
+            if (selectedRows) {
+                rowData = grid.jqGrid('getRowData', selectedRows);
+                grid.jqGrid('addRowData', undefined, rowData, 'after', selectedRows);
+            }
+        } else if (selectType === 'checkbox') { // Multi
+            selectedRows = grid.jqGrid('getGridParam', 'selarrrow');
+            if (selectedRows.length > 0) {
+                selectedRows.forEach(function(rowId) {
+                    rowData = grid.jqGrid('getRowData', rowId);
+                    grid.jqGrid('addRowData', undefined, rowData, 'after', rowId);
+                });
+            }
+        }
+    });
+
     // 말줄임표 옵션
     $('#ellipsisY').on('change', function() {
         if ($(this).is(':checked')) {
@@ -166,9 +273,50 @@ $(document).ready(function () {
         showPageInfo();
     });
 
-    // 페이징 옵션
+    // 페이징 사용 옵션
     $('#pagingYnY').on('change', function() {
-        showPageInfo();
+        const rowSettingOption = $('.ui-jqgrid .ui-pg-table .ui-pg-selbox'); // 행 설정 Select 요소
+        let pagingOption = $('#pagingOption'); // 페이징 하위 옵션
+        showPageInfo(); // 페이징 정보 표시
+        
+        if ($(this).is(':checked')) {
+            pagingOption.show();        // 하위 옵션 표시
+            rowSettingOption.hide();    // 행 설정 Select 요소 숨기기
+            grid.jqGrid('setGridParam', {
+                rowNum: 10 // 기본 값
+            }).trigger('reloadGrid');
+        } else {
+            pagingOption.hide(); // 하위 옵션 숨기기
+            grid.jqGrid('setGridParam', {
+                rowNum: dataList.length
+            }).trigger('reloadGrid');
+        }
+    });
+
+    // 페이징 행 설정 옵션
+    $('#pagingRowSetting').on('change', function() {
+        const rowSettingOption = $('.ui-jqgrid .ui-pg-table .ui-pg-selbox'); // 행 설정 Select 요소
+        if ($(this).val() === '1') { // 직접입력
+            $('.rowSize').show();       // 페이지 당 행 개수 옵션 표시
+            rowSettingOption.hide();    // 행 설정 Select 요소 숨기기
+            grid.jqGrid('setGridParam', {
+                rowNum: parseInt($('#rowSize').val(), 10)
+            }).trigger('reloadGrid');
+        } else { // 선택목록
+            $('.rowSize').hide();       // 페이지 당 행 개수 옵션 숨기기
+            rowSettingOption.show();    // 행 설정 Select 요소 표시
+            grid.jqGrid('setGridParam', {
+                rowNum: rowSettingOption.val()
+            }).trigger('reloadGrid');
+        }
+    });
+
+    // 페이지 당 행 개수 옵션
+    $('#rowSize').on('change', function() {
+        grid.jqGrid('setGridParam', {
+            rowNum: parseInt($(this).val(), 10)
+        }).trigger('reloadGrid');
+        showPageInfo(); // 페이징 정보 표시
     });
 
     // 페이지 정보 표시 함수
@@ -188,6 +336,21 @@ $(document).ready(function () {
         }
     }
 
+    // 정렬 & Filter 필터 위치 옵션
+    $('input[name="headerBtnLeftSort"]').on('change', function() {
+        if ($(this).val() === 'left') {
+            $('.ui-jqgrid .s-ico').addClass('left');
+        } else {
+            $('.ui-jqgrid .s-ico').removeClass('left');
+        }
+    });
+
+    // 행 높이 옵션
+    $('#rowHeight').on('change', function() {
+        const rowHeight = parseInt($(this).val(), 10);
+        $('.ui-jqgrid-btable').find('tr.jqgrow').css('height', rowHeight + 'px');
+    });
+
     // 그리드 생성 함수
     function createGrid(multiSelect = false) {
         const newDataList = [...dataList];  // 그리드 데이터 원본 복사
@@ -205,9 +368,23 @@ $(document).ready(function () {
             rownumWidth: 40,            // 순번 너비
             multiselect: multiSelect,   // 다중 선택 활성화
             multiselectWidth: '50px',   // multiselect 칼럼 너비
+            rowNum: dataList.length,    // 모든 행 표시
+            rowList: [10, 20, 50, 100], // 페이지 당 행 개수 선택목록
+            pager: '#pager',            // 페이저 요소
             loadComplete: function(data) {
+                // 순번 칼럼 숨기기
                 if (!$('#rowNumY').is(':checked')) {
                     $(this).jqGrid('hideCol', 'rn');
+                }
+                // 정렬 아이콘 왼쪽고정 설정
+                if ($('input[name="headerBtnLeftSort"]:checked').val() === 'left') {
+                    $('.ui-jqgrid .s-ico').addClass('left');
+                }
+                // 페이저 표시 여부
+                if ($('#pagingYnY').is(':checked')) {
+                    $('#pager').show();
+                } else {
+                    $('#pager').hide();
                 }
             }
         });
